@@ -44,6 +44,17 @@ let rec eval1 t = match t with
       let t1' = eval1 t1 in
       TmIsZero(fi, t1')
   | _ -> 
+      (* This is the case where we have a value. Note that
+         many of the other eval1 branches will hit this
+         inside a recursive eval1 call.
+
+         For example if evaluate `pred (succ true);`, we'll hit the
+         last of the TmPred cases above in the outer call, but
+         when evaluating t1 we'll then hit this and it will
+         bubble up; the evaluator will reject our code and, because
+         the arith evaluator doesn't really do error handling, it will
+         return the input term.
+      *)
       raise NoRuleApplies
 
 let rec eval t =
