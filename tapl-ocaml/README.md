@@ -50,7 +50,8 @@ opam install --yes \
   base64.3.5.1 \
   core.v0.15.1 \
   core_unix.v0.15.2 \
-  menhir.20220210
+  menhir.20220210 \
+  dune 3.8.2
 ```
 
 You also likely want IDE support; for that you can run
@@ -65,3 +66,15 @@ opam install --yes \
 It's also recommended for vscode to install `ocamlformat-rpc`, but as
 of me writing this it couldn't yet work with 5.0.0.
 
+## Getting IDE support
+
+My experience was that using the basic Makefile build scripts that were
+already in the project produced a state where `ocaml-lsp-server` was
+able to successfully talk to VSCode and I got type hints. I'm not 100%
+sure about ocaml, I didn't have vim or emacs set up to use it at the
+time I tested.
+
+It seems like using a dune build also worked out-of-the-box (after
+a `make clean`) so I think `ocaml-lsp-server` is able to find
+the files it needs under both a "flat" make-based structure and
+a `_build`-based dune structure.
