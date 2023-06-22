@@ -199,7 +199,8 @@ duplicate work, but the end result is the same - the confusing bit
 entire result at the end instead of doing a more delicate traversal where
 we handle the substitution and free variable adjustments in one pass.
 
-### What's the relation of substitution to "normal" environments
+
+### What's the relation of substitution to "normal" environments?
 
 This is all somewhat icky, and I'm still trying to wrap my head around how
 the term rewriting approach jives with the much easier to understand environment
