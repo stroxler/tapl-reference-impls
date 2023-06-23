@@ -45,6 +45,22 @@ a lot more obvious and there's no confusion.
 
 ## De Brujin indices
 
+### What are all these "depths" for?
+
+Every variable has a depth, which is the lexical scope depth when it comes
+out of the parser and is updated on rewrites.
+
+The depth should match the stack depth when we try to evaluate that variable,
+but we never actually *use* the depth in evaluation. Why is it even here?
+
+It's purely for debugging: the shift operations are tricky to get right,
+and it's not obvious if you mess up a variable's shift but the stack is
+deep enough to evaluate the buggy result. The depth, on the other hand, should
+be 1:1 with the runtime stack depth so including depth adjustments makes it
+easier to validate our logic.
+
+The book discusses this a few paragraphs into section 7.1.
+
 ### Parsing
 
 Because we convert names to De Brujin indices, we have to include a context
@@ -291,5 +307,3 @@ other than maybe lisp.
 Note that in the "pure" untyped lambda calculus we *only* had `NameBind`, there
 was no such thing as a "value" bound to a global name.
 
-
-The de brujin index of a term is how closely bound the term is
