@@ -108,6 +108,7 @@ let rec getbinding fi ctx i =
     let msg =
       Printf.sprintf "Variable lookup failure: offset: %d, ctx size: %d" in
     error fi (msg i (List.length ctx))
+
  let getTypeFromContext fi ctx i =
    match getbinding fi ctx i with
        VarBind(tyT) -> tyT
