@@ -106,7 +106,9 @@ for printing
       De Brujin. But I don't think we ever actually do that.
 
 
-## More thoughts on De Brujin indexes in substitution-based evaluation
+## More thoughts on De Brujin indexes
+
+### De Brujin indices in substitution-based evaluation
 
 I want to highlight the one thing I noticed that didn't jump out to me when I
 wrote notes on the full untyped lambda calculus: at runtime, the context *only*
@@ -134,7 +136,7 @@ This wasn't entirely obvious to me until now, but you can see by skimming the
 code that `ctx` is never modified by expression evaluation, the only time it is
 modified is when evaluating a Bind command (in `Main.process_command`)
 
-## De Brujin indexes and environment evaluation
+### De Brujin indexes and (type) environment evaluation
 
 As I've noted earlier, De Brujin is actually more useful in environment-based
 evaluation where it leads to efficient stack lookups.
@@ -148,3 +150,109 @@ book is that it actually doesn't map as cleanly - an environment model for evalu
 leads to type check and runtime evaluation working very similarly, where at runtime
 a value environment plays roughly the same role as the static type environment. With
 a substitution-based evaluator the connection is much less obvious.
+
+## Implementation issues
+
+One thing to note about the implementation - in `typeof`, the authors started
+usign the ocaml `(=)` operator. This is okay in a toy, but the polymorphic
+comparison is not good for performance; a clean implementation should derive
+an `eq` operator, e.g. via `ppx_deriving`.
+
+The authors point out that `(=)` uses structural equality rather than pointer
+equality; the same would be true of `ppx_deriving`. In a later chapter they
+point out that for large type checkers, it can be worth using some
+representation (e.g. cons hashing) to guarantee that structurally equal types
+have the same pointer, which would then allow us to use pointer comparison.
+
+## Debugging
+
+
+### Building for the debugger
+
+I modified the executable stanza to the dune file for this chapter:
+```
+(executable
+ (name main)
+ (modes byte exe))
+```
+which causes dune to build a `main.bc` at `_build/default/main.bc`, in
+addition to the native executable at `_build/default/main.exe`.
+
+In addition, dune wraps the module names by default which confuses the
+debugger when you refer to `Main` (you can work around it by referring to
+`dune__exe__Main`, but that's a pain). You can prevent this by adding
+```
+(wrapped_executables false)
+```
+underneath the `lang` stanza in your `dune-project`.
+
+Then you can just run `dune build`, and in addition to the native executable at
+` _build/default/main.exe` you'll also have a bytecode executable at
+`_build/default/main.bc`.
+
+### Running the command-line debugger
+
+You can then debug by running:
+```
+ocamldebug -I _build/default/.main.eobjs/byte _build/default/main.bc test.f
+```
+
+The path to use for the `-I` flag is wherever the `.cmi` files live; it may
+change if your executable name changes but you can just tree `_build` to
+find it. If the `-I` flag is wrong, you'll find that you get errors like
+```
+Unbound identifier Xxx.yyy.
+Cannot find module Xxx.
+Can't find any event there.
+```
+
+Similar to `lldb` this will pop you into a debug session where you run
+the program using `run`. You'll typically want to set a breakpoint first.
+
+You can break in a few ways, the most useful are:
+- by line number, e.g. `break @ Main 75`
+- for complex code with callbacks, by line + column e.g. `break @ Main 75 63`
+- by function name, e.g. `break Core.typeof`
+  - One thing you'll encounter is that you need to jump into the program
+    some distance before you can set a breakpoint outside of Main; for example I
+    needed to `go 500` and *then* set `break Core.typeof`. This is because
+    the debugger can't inspect events until the module is loaded.
+
+Once at a breakpoint you can print variables
+- shallowly with `display <varname>`
+- deeply with `print <varname>`
+
+Using the debugger to print is especially helpful in the TAPL code because
+nothing has a `show` derived implementation, so print debugging would be
+tedious. There are still some things it won't show, for example `Syntax.ctx`
+seems to be an abstract type the debugger can't print (at least when
+inside another module's code). I haven't yet looked into the `install_printer`
+and `load_printer` commands, those would likely let you attach a printer
+where the debugger can't figure it out.
+
+You can do normal stepping with
+- `next`, which jumps to the next event in the same function
+- `step` which goes to the next event (I think it will enter calls)
+
+You can get visibility into the current frame using
+- `frame` just to see where you are
+- `backtrace` to see the full callstack
+- `up` or `down` to move frames while remaining at the current event
+
+The debugger is backtracking; when you hit a breakpoint you'll see a
+`Time: 1456` listed, and you can use `go <some time>` to move either
+backward or forward (I'm uncertain how this deals with nondeterministic
+code). You can also use `backstep` and `reverse` to move backward in
+other ways.
+
+### TODO: running the debugger in emacs
+
+The command-line debugger has all the functionality you really need, but
+it's not the most user-friendly setup; in particular it lacks an
+equivalent of the `list` command in Python, which can make it tricky to
+see where you are in a program.
+
+Running it under an IDE solves this problem, as well as being generally
+more convenient. I think only emacs has mature bindings at the moment
+(I would guess it will come to VSCode sooner or later), and I should
+investigate this!

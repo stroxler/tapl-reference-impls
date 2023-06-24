@@ -9,4 +9,5 @@
   (modules parser))
 
 (executable
-  (name main))
+  (name main)
+  (modes byte exe))
