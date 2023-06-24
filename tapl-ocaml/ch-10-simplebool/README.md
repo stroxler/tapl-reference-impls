@@ -6,6 +6,17 @@ lambda calculus).
 
 Chapter 10 goes through how this works in terms of theory.
 
+### Highlights from the chapter
+
+The main highlight is that the typing rules, while they do follow from
+the inference rules (Figure 9-1), are more properly considered a translation
+of the typing inversion lemma 9.3.1.
+
+To the extent that you want to focus on understanding the relationship between
+type inference rules and a practical type checker implementation, focusing
+on the process of creating an inversion lemma is the way to go; this can be
+nontrivial in more complex type systems.
+
 ## bindings in this STLC
 
 ### Global bindings (VarBind produced by the parser)
@@ -23,6 +34,13 @@ but now it is *just* a type with no term. This seems strange, but I think it may
 be because the focus is on typing and from that point of view we only really
 need typed globals (and let bindings, which we add in Chapter 11, solve most of
 the resulting annoyance making runnable examples).
+
+... Actually after a closer look, only `fulluntyped` supported top-level binds
+of actual terms. The bare-bones `untyped` implementation only had `NameBind`;
+all you could do was define top-level names that evaluated to themselves (plus
+the parser used `NameBind` internally to build the lookup stack for making
+DeBrujin indices). And the binding type in that case was `TmAbbBind`, which
+is indeed present in the "full" typed lambda calculi.
 
 You're allowed to use globals with no definition, evaluation just terminates (in
 non-normal form) when you get there; I added the example code
