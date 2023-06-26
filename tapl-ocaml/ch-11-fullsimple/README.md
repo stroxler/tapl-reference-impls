@@ -95,3 +95,11 @@ This logic feels messy, the `TyId` and unresolvable `TyVar`
 seem to be treated similarly but by incredibly different code
 branches because of the De Brujin global index vs bare name
 representation.
+
+
+## Records and Variants
+
+TODO: I should write some notes on how exactly the dispatching
+happens here, and also add some examples of variants (the current
+`test.f` only has records). I think the rules are probably pretty
+obvious, but the code is nontrivial to skim.
