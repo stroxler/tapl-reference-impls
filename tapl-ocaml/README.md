@@ -78,3 +78,9 @@ It seems like using a dune build also worked out-of-the-box (after
 a `make clean`) so I think `ocaml-lsp-server` is able to find
 the files it needs under both a "flat" make-based structure and
 a `_build`-based dune structure.
+
+## Getting debugger support
+
+See the chapter 10 README for notes on setting up and using
+a command-line debugger. Starting at that chapter, the dune files
+support ocamldebug use against their output.
