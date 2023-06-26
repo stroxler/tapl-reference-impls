@@ -54,3 +54,44 @@ complex examples without needing tons of boilerplate.
 
 TODO: make some examples of this! Currently `test.f` doesn't have
 any.
+
+
+## What is TyVar?
+
+I was pretty confused when I first saw `TyVar`, becaus it doesn't
+really mean a type variable (this isn't polymorphic yet!).
+
+The answer is that it represents a pointer to a "global" type;
+this idea gets introduced by the `TyVarBind`. Whenever we have
+a type annotation that is an upper-case identifier (UCID), we
+ask whether that name is currently bound and if so we create
+a TyVar pointing to it.
+
+You can see this best if you look at two things:
+- The `UCID TyBinder` branch of the `Command` parser, which
+  winds up producing either a `TyVarBind` or a `TyAbbBind`
+- The evalbinding code, which leaves type bindings as-is
+- The `simplifyty` code which:
+  - if all types are valid abbreviations (TyAbbBind), will
+    resolve them all recursively
+    - Note that if an unbound type name was used anywhere,
+      it will resolve to an opaque `TyId` because that's what
+      the UCID case of the parser for `AType` produces.
+  - if it ever hits an unresolvable type (given the `TyId` logic
+    above this would only happen when we find a valid
+    `TyVarBind` binding), it terminates evaluation leaving the
+    `TyVar` as is.
+
+### `TyVar` pointing to a `TyVarBind` vs `TyId`
+
+The `tyequiv` handles the two "unresolved-to-concrete-type"
+cases of an unresolved `TyVar` (which happens when an opaque
+global type is used) and `TyId` (which happens when an undeclared
+type is used) in roughly the same way: if the bindings are the same
+(where we can think of `TyId` as a binding to some negative stack
+index representing undeclared types) they are the same.
+
+This logic feels messy, the `TyId` and unresolvable `TyVar`
+seem to be treated similarly but by incredibly different code
+branches because of the De Brujin global index vs bare name
+representation.
