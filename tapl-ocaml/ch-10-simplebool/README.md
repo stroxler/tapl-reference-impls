@@ -245,7 +245,7 @@ backward or forward (I'm uncertain how this deals with nondeterministic
 code). You can also use `backstep` and `reverse` to move backward in
 other ways.
 
-### TODO: running the debugger in emacs
+### TODO: Learn to run the debugger in emacs
 
 The command-line debugger has all the functionality you really need, but
 it's not the most user-friendly setup; in particular it lacks an
