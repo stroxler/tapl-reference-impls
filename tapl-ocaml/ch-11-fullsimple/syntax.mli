@@ -6,7 +6,6 @@ open Support.Error
 (* Data type definitions *)
 type ty =
     TyId of string
-  | TyVar of int * int
   | TyUnit
   | TyFloat
   | TyRecord of (string * ty) list
