@@ -1,0 +1,13 @@
+(env
+  (dev
+    (flags (:standard -warn-error -A))))
+
+(ocamllex
+  (modules lexer))
+
+(ocamlyacc
+  (modules parser))
+
+(executable
+  (name main)
+  (modes byte exe))
