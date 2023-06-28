@@ -3,6 +3,11 @@
 This implementation covers record subtyping with a Top type but *not* a bottom
 type, and is built on top of the "full" extended STLC
 
+It does not include variant subtyping (which is described in section
+15.5 but as far as I can tell not included in any implementation; it
+is probably no harder to implement than record subtyping since they are
+more or less duals of one another).
+
 ## Relationship to other subtyping implementations
 
 The other two chapter 17-specific implementations are both based on a more
