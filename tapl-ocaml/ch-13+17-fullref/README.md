@@ -101,6 +101,25 @@ The special cases that pop up are:
   labels and take meet on all components, `join` would take the union of labels
   and join all components) but maybe not that useful in practice.
 
+**Keeping our eye on the ball: *why* do we even need meet and join?**
+
+Meet and join are interesting conceptual operations regardless of the need,
+but it's worth asking why we actually need them in `typeof`.
+
+The answer is that `join` comes up in branching logic. In an imperative language
+like `Pyre` this often means when nodes of the CFG intersect we perform a join
+on *everything*; in the cleaner term-based systems of TAPL we only need joins
+for `case` and `if`.
+
+Note that from the standpoint of `typeof` only `join` is really needed; `meet`
+just comes up when we have contravariant type parameters in a complex type you
+need to join.  See section 16.3 (page 218) for a discussion of this.
+
+It's also worth noting that the authors opt to use union and intersection notation
+for the join and meet, even though in the context of 16.3 they are talking about
+an implementation detail rather than first-class union and intersection as in
+15.7. This is because the ideas are roughly isomorphic.
+
 ### `subtype`: more or less follows from `join` and `meet`
 
 Subtype is implemented as follows:
