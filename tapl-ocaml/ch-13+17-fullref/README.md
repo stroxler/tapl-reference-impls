@@ -51,11 +51,132 @@ In terms of typing, the book points out that Sink and Source behave exactly
 the same as endpoints of a channel (e.g. a go channel), as introduced by the
 Pict language.
 
-### The algorithms / metatheory / implementation notes
+### Where in the book are the algorithms / implementation discussed?
 
 Subtyping algorithms (or at least the portion of them needed for the
 slightly smaller `fullsub` implementation) are described in detail in
 Section 16; the ML realization of them are discussed in Chapter 17.
+
+## Typing implementation notes
+
+### simplifyty and tyequiv: mostly the same as in `fullsimple`
+
+The `simplifyty` function handles expanding abbreviations to their
+canonical forms via `computety` which is not trivial, but I already have
+notes on that in an earlier chapter.
+
+The `tyeqv` function is basically just a recursive equality check, except that
+`TyRecord` and `TyVariant` check for equality up to permutations (which implies
+subtyping both directions, an equivalence but not necessarily "equality" if we
+mean physical equality) rather than exact equality.
+- Note that the distinction between equality and equivalence can be
+  host-language representation-sensitive; if we used a map rather than an
+  association list we could use a derived equality check here because equivalent
+  types would be considered "equal" in ocaml.
+
+### join and meet: "union" and "intersection" operations (sort of)
+
+They are mutually recursive to handle contravariant cases.
+
+- They begin with subtype checks, which handles equivalent types and all the
+  primitive types out of the box so by the time we get to a match we have ruled
+  those out.
+- If that doesn't work, they `simplifyty` (which again expands type abbreviations)
+  and then use a match to recurse...
+- They recurse down most complex types, calling either the same operation
+  `join`/`meet` or the opposite depending on covariance vs contravariance (for
+  example, arrow flips the input but keeps the output the same)
+- If they get stuck, they produce either `Top` for join or `Bot` for meet
+
+
+The special cases that pop up are:
+- The `Record` case is fully implemented:
+  - `meet` takes the union of all labels and meets every component type
+  - `join` takes the intersection of all labels and joins every component type
+- The `Ref` type is invariant, and has an incomplete implementation that
+  converts to `Source` or `Sink` if needed... I think it may be an exercise
+  to finish this?
+- The authors didn't implement `join` and `meet` for Variant in the non-subtyping
+  case; I think it's possible to do so (`meet` would take the intersection of
+  labels and take meet on all components, `join` would take the union of labels
+  and join all components) but maybe not that useful in practice.
+
+### `subtype`: more or less follows from `join` and `meet`
+
+Subtype is implemented as follows:
+- First we check for equivalent types, for efficiency and because it
+  makes the match statement simpler (for example, none of the primitive
+  literal types are needed in the match statement)
+- Then we use a recursive match, which works as you'd expect:
+  - For covarant type params we just recursively call `subtype` in the same direction
+  - For contravariant type params we do the same but flip the direction
+  - For the invariant `Ref` we require equivalence of the inner types
+  - For records and variants, we use a containment check plus per-component
+    covariant checks on each component.
+    - The fact that this works is part of the topic of Chapter 16, since
+      the algorithmic typing rules are actually simpler than the derivation
+      rules (and don't follow from them, since there are *many* possible
+      derivations for subtype relationships unlike in STLC).
+
+One thing that's a little annoying is that `tyequiv` isn't implemented in
+terms of two `subtype` checks, and the authors use both patterns in other code;
+this means we really should have a proof that they behave the same. I suppose
+there's probably an efficiency win in separating them, although this doesn't
+explain why the authors frequently use two `subtype` checks rather than a
+`tyequiv` check in downstream code where both were available.
+
+### The `typeof` implementation
+
+Once you understand `join`, `meet`, and `subtype` the `typeof` implementation
+isn't too scary:
+- several terms are handled exactly as before:
+  - primitives evaluate to the related type
+  - variables just get the type from the context
+  - abstraction: add the param to context, then call `typeof` on the body
+  - references: just get the type of the term
+- data constructors generally require a subtype relation, for example
+  - a tag term's param term needs to type as a subtype of the variant component
+    type (and the tag has to be valid but that's not new since Chapter 11)
+  - similarly, a record term needs to have subtype on all components - several of
+    the other terms involve subtype checks and may use join / meet
+- ascribe is a bit special; it allows upcasts
+- operations generally have specific rules based on substitution logic
+  - apply requires the parameter (`t2`) to be a subtype of what's annotated
+  - case requires that the "natural type" of the case is a supertype of
+    the input type (which means it could have extra branches, but must include
+    a branch for every label) and then joins all of the output types
+    - note that we're allowed to have incompatible output types because of the
+      presence of `Top`; we just can't do anything with the output
+  - Proj requires the type to be a subtype of the "natural type" - i.e. that
+    it has the relevant label, and extracts that label
+  - Deref just passes the type through
+
+The bottom type shows up all over the place and is best thought of as
+"this cannot happen" in this implementation; I *think* the only actual use of
+bottom that will type check is an infinite loop with `Fix`.  (In an
+implementation extended with exceptions bottom would also show up in exceptions;
+see the Chapter 14 implementation).
+
+
+### Keep your eye on the ball when thinking about `typeof`
+
+It's easy to get lost in details of `meet`, `join`, etc, which are operations
+on a lattice and don't directly produce type errors.
+
+When you look at `typeof` you have to shift gears and remember what the
+*point* of subtyping is: `t0 <: t1` if `t0` is substitutable for `t1`. This
+means that we need a subtype check on the type parameters of types representing
+any kind of "operation", which includes:
+- application (this is really the essence of "operation")
+- primitive operations, which for this language are
+  - case and projection operations
+  - assignment (this is a two-parameter operation!)
+
+Keep in mind that application and its cousins (e.g. case, deref, and proj, all
+of which can in principle be reformulated as application) are really the *point*
+of subtyping; the only requirement is that a subtype "behave like" any
+supertype, and what that means formally is that all function applications
+(including primitive operations) can accept subtypes
 
 ## Usage: Chpater 18
 
