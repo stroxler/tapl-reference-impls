@@ -178,6 +178,63 @@ of subtyping; the only requirement is that a subtype "behave like" any
 supertype, and what that means formally is that all function applications
 (including primitive operations) can accept subtypes
 
+### Why is the implementation so tricky? A few pointers to Chapter 16
+
+If you look at the subtyping rules, they are actually pretty simple:
+all we need is subtype and `T-SUB`, which allows implicit casts, and the rest
+of the typing rules are unchanged.
+
+But the implementation in `typeof` is *much* more complex, with subtype
+checks buried in many of the arms where we have to think very carefully
+about each case.
+
+The reason for this is that the implicitness of `T-SUB` requires us to
+*extract* the type we want to match on from the form we are substituting
+into. As a result, we have to
+- deduce the input type of the lambda in a `TyApp`
+- effectively deduce the "natural type" of projection and case terms,
+  and do a subtype check (which we don't encode that way)
+- deduce the output type of `case` and `if`, because the branches no longer
+  have to have the same natural type so we need a `join` here
+
+This is exactly what the authors drive home at the start of Chapter 16: the
+formula for `T-SUB` is
+```
+\Gamma |- t : S    S <: T
+-------------------------
+\Gamma |- t : T
+```
+and the `T` here comes out of nowhere: nothing in this form lets us extract
+the `T` from a type, so this rule has no self-contained algorithmic realization.
+This comes up in the handling of `typeof`.
+
+T-TRANS is similar:
+```
+S <: U  U <: T
+---------------
+S <: T
+```
+has all the types coming out of nowhere, and in fact the choice of `U` is
+in many cases arbitrary (e.g. "any one of a bunch of extra record fields").
+This comes up in the handling of `subtype`.
+
+**Algorithmic subtyping: Page 212, figure 16-2**
+
+We can prove that `S-RCD` (Page 211) is equivalent to the three primitive record
+subtyping rules, and in the actual `subtype` implementation this is actually
+*more* convenient which solves the transitivity issue; we wind up with the
+three rules at the top of 212 (`SA-TOP`, `SA-ARROw`, and `SA-RCD`) for algorithmic
+subtyping.
+
+**Algorithmic typing: Page 217, figure 16-3**
+
+But for agorithmic typing the need for `T-SUB` is trickier and we wind up with
+special-case, new algorithmic typing rules for typing (Figure 16-3 on page 217).
+Those rules are what we wind up embodying in our `typeof` implementation.
+
+But the implicit `T-SUB` issue remains, and requires special-case rules; for the
+simple case the three rules on page 212 
+
 ## Usage: Chpater 18
 
 The code in Chapter 18, for imperative objects embedded in the extended
