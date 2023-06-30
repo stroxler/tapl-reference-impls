@@ -149,3 +149,22 @@ until / unless I learn enough to actually figure out why dune isn't setting
 the right flag; it's at least nice to be able to debug academic example code;
 for Pyre I might have to rely on tracevent tooling if I want good stack
 visibility.
+
+
+... Aha! I think I figured it out.
+
+I was using
+```
+dirs="$(find ~/.opam/4.14.0/lib/ -name '*.so' | xargs dirname | uniq)"
+for d in $dirs; do   export LIBRARY_PATH="$d/:$LIBRARY_PATH"; done
+```
+and this didn't work, but it turns out the problem is `.a` files rather
+than `.so` files (I really need to understand this in more detail!!).
+I was able to get it working with:
+```
+dirs="$(find ~/.opam/4.14.0/lib/ -name '*.a' | xargs dirname | uniq)"
+for d in $dirs; do   export LIBRARY_PATH="$d/:$LIBRARY_PATH"; done
+```
+
+... I guess this makes sense in hindsight, it's a *build* error and
+I think ld is only used at build time for static linking, not dynamic.
