@@ -28,6 +28,21 @@ The evaluation model is:
 - `! whatever` gets parsed into a `TmDeref(_, term)`
 - `TmDeref(TmLoc(_, loc))` evaluates to a store lookup
 
+## A note on semantics: Ref is *not* a value!
+
+This matters mostly when lining this code up with the note about
+how, if we want to avoid weakrefs, the bound term must be a value
+in order to use polymorphic let.
+
+I was pretty confused about that at first because `ref` *looks* like
+a value. But remember, `ref` is actually allocating a slot for a
+mutable placeholder, which means `ref` doesn't have value semantics
+from the standpoint of the lambda calculus; it is basically an `IO IORef`
+in Haskell terms which is certainly not a value!
+
+A derefe'd ref is a value (either a location or whatever is in the
+location pass `isval`.
+
 ## Typing: references + subtyping (with variants, records, Top, and Bot)
 
 This is really the cannonical implementation of not only references but
