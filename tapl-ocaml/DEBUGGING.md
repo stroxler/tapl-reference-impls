@@ -123,3 +123,29 @@ https://verimag.gricad-pages.univ-grenoble-alpes.fr/vtt/articles/sasa-ocamldebug
 
 One other resource that may prove handy:
 https://github.com/ocaml/ocaml/issues/6777
+
+## Debugging on complex projects
+
+The TAPL code is all pure-ocaml, but I've been having major issues
+getting a bytecode compile of Pyre to work at all - dune just chokes
+complaining about ld failures.
+
+I suspect fixing this will require a deep dive on dune internals because
+somehow the linker paths are messed up. I found a few threads about it,
+I vaguely remember in the past that I was able to use the advice here to
+set LIBRARY_PATH.
+https://github.com/janestreet/pythonlib/issues/1
+
+Unfortunately it doesn't appear that the LIBRARY_PATH fix is working for me
+today :/
+
+There's a thread about the problem in Dune here:
+https://github.com/ocaml/dune/issues/3910
+
+What's strange is that `dune utop` works just fine.
+
+In the meantime, I'm probably going to have to give up on debugging Pyre
+until / unless I learn enough to actually figure out why dune isn't setting
+the right flag; it's at least nice to be able to debug academic example code;
+for Pyre I might have to rely on tracevent tooling if I want good stack
+visibility.
