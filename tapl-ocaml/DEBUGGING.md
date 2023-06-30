@@ -81,7 +81,7 @@ bindings.
 There used to be an `ocamlearlybird` plugin for VSCode
 but it is no longer maintained.
 
-## Other tools
+## Other tools, and printing
 
 ### Red: a python wrapper around ocamldebug
 
@@ -101,3 +101,25 @@ It's only around 400 lines of code, so this could be a cool hack project
 to patch it up and make it more usable (plus add some documentation!); this
 is actually right in a class of tools that interests me - wrapping a cli
 interface in another cli interface to make it more programmable :)
+
+### Loading and installing printers
+
+Here's some discussion of how loading and installing printers works.
+https://stackoverflow.com/questions/75619816/how-do-i-install-a-printer-for-a-user-defined-type-in-ocamldebug
+and also
+https://groups.google.com/g/fa.caml/c/EZvxh3UWrAA?pli=1
+
+I suspect I may need to scriptify this to get printing wroking on
+parts of Pyre (also temporarily deleting relevant .mli files when
+debugging to expose the "raw" types may help).
+
+Also note that it's somewhat likely I'll have to deal with dune
+wrapped libraries, which affects both the location of main
+(as I've noted elsewhere) and the `install_printer` directive.
+
+There's a discussion of that (in the context of using a different
+debugger `rdbg` that is built on top of ocaml) here:
+https://verimag.gricad-pages.univ-grenoble-alpes.fr/vtt/articles/sasa-ocamldebug/
+
+One other resource that may prove handy:
+https://github.com/ocaml/ocaml/issues/6777
