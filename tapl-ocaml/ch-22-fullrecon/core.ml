@@ -117,6 +117,15 @@ let rec recon ctx nextuvar t =
           let (tyT2,nextuvar2,constr2) = recon ctx1 nextuvar1 t2 in
           (tyT2, nextuvar2, constr1@constr2)
         else
+          (* this is the magic bit that allows let-polymorphism.
+             
+             this implementation is, I believe, a direct handling of
+             CT-LETPOLY because it isn't actually calling recon
+             on `t1` unless `t1` appears in `t2`.i
+             
+             The efficient approach described at the bottom of page 333
+             is left as an exercise I guess. The Cornell CS3110 lectures
+             walk through that algorithm in detail. *)
           recon ctx nextuvar (termSubstTop t1 t2)
     | TmZero(fi) -> (TyNat, nextuvar, [])
     | TmSucc(fi,t1) ->

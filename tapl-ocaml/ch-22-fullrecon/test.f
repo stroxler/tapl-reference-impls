@@ -21,3 +21,9 @@ let x=true in x;
 let f = lambda x. x in (f f) (f 0);
 let g = lambda x. 1 in g (g g);
 
+
+/* This produces a type error: (lambda x:Nat. x) true; */
+
+/* But this doesn't! The implementation uses CT-LETPOLY rather than T-LETPOLY */
+
+let unused = (lambda y. (lambda x:Nat. x) true) in 0;
