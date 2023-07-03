@@ -32,7 +32,8 @@ type command =
   | Bind of info * string * binding
 
 (* Contexts *)
-type context
+type context = (string * binding) list
+(* make context concrete for debugger ;; type context *)
 val emptycontext : context 
 val ctxlength : context -> int
 val addbinding : context -> string -> binding -> context
